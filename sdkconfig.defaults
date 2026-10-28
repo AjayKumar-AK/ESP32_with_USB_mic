@@ -1,5 +1,25 @@
-CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+# ESP32-S3 N16R8: 16 MB QUAD flash + 8 MB OCTAL PSRAM
+CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
 
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=y
+CONFIG_FREERTOS_HZ=1000
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
+
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_MODE_OCT=y
+CONFIG_SPIRAM_SPEED_80M=y
+CONFIG_SPIRAM_BOOT_INIT=y
+# PSRAM only via heap_caps_malloc(MALLOC_CAP_SPIRAM), like the working mic firmware:
+# plain malloc() (USB/UAC internals, FatFS, tasks) stays in internal RAM.
+CONFIG_SPIRAM_USE_CAPS_ALLOC=y
+
+CONFIG_FATFS_LFN_HEAP=y
+CONFIG_FATFS_MAX_LFN=255
+
+# Bluetooth (admin mode only) - same NimBLE settings as the working mic firmware
 CONFIG_BT_ENABLED=y
 CONFIG_BT_NIMBLE_ENABLED=y
 CONFIG_BT_NIMBLE_ROLE_PERIPHERAL=y
@@ -7,10 +27,27 @@ CONFIG_BT_NIMBLE_GATT_SERVER=y
 CONFIG_BT_NIMBLE_MAX_CONNECTIONS=1
 CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU=247
 
-# ESP32-S3 Super Mini = ESP32-S3FH4R2: 4MB flash + 2MB QUAD (not octal) PSRAM
-CONFIG_SPIRAM=y
-CONFIG_SPIRAM_MODE_QUAD=y
-CONFIG_SPIRAM_SPEED_40M=y
-CONFIG_SPIRAM_BOOT_INIT=y
-# Boot even if PSRAM init fails (firmware reports NO_PSRAM_FOR_CAPTURE over BLE instead of boot-looping)
-CONFIG_SPIRAM_IGNORE_NOTFOUND=y
+# NTP: two servers (pool + Google)
+CONFIG_LWIP_SNTP_MAX_SERVERS=2
+
+# ---- Internal RAM diet (boot log showed only ~65 KB free once Wi-Fi + BLE were up) ----
+# Wi-Fi speed-ups that live in internal RAM; a 160x128 recorder does not need them
+CONFIG_ESP_WIFI_IRAM_OPT=n
+CONFIG_ESP_WIFI_RX_IRAM_OPT=n
+# BLE: admin mode only needs a peripheral that advertises and accepts one connection
+CONFIG_BT_NIMBLE_ROLE_CENTRAL=n
+CONFIG_BT_NIMBLE_ROLE_OBSERVER=n
+CONFIG_BT_NIMBLE_50_FEATURE_SUPPORT=n
+CONFIG_BT_NIMBLE_MEM_ALLOC_MODE_EXTERNAL=y
+
+# ---- HTTPS upload ----
+# mbedTLS buffers live in PSRAM (internal RAM is tight); certificates are checked against the built-in CA bundle.
+CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC=y
+CONFIG_MBEDTLS_CERTIFICATE_BUNDLE=y
+CONFIG_MBEDTLS_CERTIFICATE_BUNDLE_DEFAULT_FULL=y
+# Only used if UPLOAD_TLS_VERIFY is set to 0:
+CONFIG_ESP_TLS_INSECURE=y
+CONFIG_ESP_TLS_SKIP_SERVER_CERT_VERIFY=y
+
+# Lets the USB test stage raise the USB host library's own logs to DEBUG at run time (port connect/reset/speed).
+CONFIG_LOG_MAXIMUM_LEVEL_DEBUG=y

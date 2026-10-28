@@ -44,8 +44,8 @@ GPIO assignments and display settings are defined in
 ### Requirements
 
 - PlatformIO Core or the PlatformIO extension for VS Code.
-- An ESP32-S3 toolchain and ESP-IDF **5.5.3 or later**. The locked USB
-  components require this ESP-IDF version.
+- An ESP32-S3 toolchain and ESP-IDF **5.5.3**, matching the version pinned in
+  [`dependencies.lock`](dependencies.lock).
 - A USB data connection to the ESP32-S3 for flashing and serial monitoring.
 
 The configured PlatformIO environment is `s3_n16r8`:
